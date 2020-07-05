@@ -28,7 +28,7 @@ class TDClient():
     to the TD Ameritrade API.
     """
 
-    def __init__(self, client_id: str, redirect_uri: str, account_number: str = None, credentials_path: str = None) -> None:     
+    def __init__(self, client_id: str, redirect_uri: str, account_number: str = None, credentials_path: str = None, cache_state = True ) -> None:     
         """Creates a new instance of the TDClient Object.
 
         Initializes the session with default values and any user-provided overrides.The 
@@ -71,7 +71,7 @@ class TDClient():
 
         # define the configuration settings.
         self.config = {
-            'cache_state': True,
+            'cache_state': cache_state,
             'api_endpoint': 'https://api.tdameritrade.com',
             'api_version': 'v1',
             'auth_endpoint': 'https://auth.tdameritrade.com/auth',
@@ -176,11 +176,12 @@ class TDClient():
         """
 
         # Grab the current directory of the client file, that way we can store the JSON file in the same folder.
+        json_session_file = None
         if self.credentials_path is not None:
             json_session_file = pathlib.Path(self.credentials_path)
             json_session_path = json_session_file.absolute()
             
-        else:
+        elif self.config['cache_state']:
             file_name = 'td_state.json'
             
             json_file_dir = defaults.default_dir
@@ -197,7 +198,7 @@ class TDClient():
                 self.state.update(json.load(json_file))
 
         # If they don't allow for caching and the file exists, then delete it.
-        elif action == 'init' and self.config['cache_state'] == False and json_session_file.exists():
+        elif action == 'init' and self.config['cache_state'] == False and json_session_file is not None and json_session_file.exists():
             json_session_file.unlink()
 
         # if they allow for caching and the file does not exists then use the default state.
